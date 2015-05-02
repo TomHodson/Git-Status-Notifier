@@ -20,7 +20,7 @@ output_format = \
 """
 
 pressing_repos = []
-number_of_orphan_files = 0
+orphan_files = []
 
 for f in listdir(github_folder):
 	full_path = path.join(github_folder, f)
@@ -34,10 +34,11 @@ for f in listdir(github_folder):
 			last_modified = time,
 			status = full_status, 
 			underline = '#' * (len(time) + len(f) + 2)))
-	else: number_of_orphan_files += 1
+	elif not f.startswith("."): orphan_files.append(f)
 
-if number_of_orphan_files:
-	pressing_repos.append("You have {n} orphaned files in your git directory that need homes.".format(n = number_of_orphan_files))
+extra_messages = ''
+if orphan_files:
+	extra_messages += "You also have {n} orphaned files in your git directory that need homes. \n {files}".format(n = len(orphan_files), files = ", ".join(orphan_files))
 
 output =  "".join(pressing_repos)
 
@@ -56,6 +57,7 @@ if output:
 	  "",
 	  output
 	  ])
+	msg += extra_messages
 
 	if not dryrun:
 		server.sendmail("thomas.c.hodson@gmail.com", "thomas.c.hodson@gmail.com", msg)
