@@ -21,24 +21,30 @@ output_format = \
 
 pressing_repos = []
 orphan_files = []
+extra_messages = ''
 
 for f in listdir(github_folder):
-	full_path = path.join(github_folder, f)
-	if path.isdir(full_path):
-		full_status = check_output(["git", "status"], cwd = full_path)
-		short_status = check_output(["git", "status", "--porcelain"], cwd = full_path)
+	try:
+		full_path = path.join(github_folder, f)
+		if path.isdir(full_path):
+			full_status = check_output(["git", "status"], cwd = full_path)
+			short_status = check_output(["git", "status", "--porcelain"], cwd = full_path)
 
-		time = strftime("%a, %d %b", gmtime(path.getmtime(full_path)))
-		if short_status:
-			pressing_repos.append(output_format.format(repo_name = f,
-			last_modified = time,
-			status = full_status, 
-			underline = '#' * (len(time) + len(f) + 2)))
-	elif not f.startswith("."): orphan_files.append(f)
+			time = strftime("%a, %d %b", gmtime(path.getmtime(full_path)))
+			if short_status:
+				pressing_repos.append(output_format.format(repo_name = f,
+				last_modified = time,
+				status = full_status, 
+				underline = '#' * (len(time) + len(f) + 2)))
+		elif not f.startswith("."): orphan_files.append(f)
+	except:
+		extra_messages +=  "Failed to call git status in {} \n".format(f)
 
-extra_messages = ''
 if orphan_files:
-	extra_messages += "You also have {n} orphaned files in your git directory that need homes. \n {files}".format(n = len(orphan_files), files = ", ".join(orphan_files))
+	extra_messages += "You also have {n} orphaned file{s} in your git directory that need homes. \n {files}\n".format(
+		n = len(orphan_files),
+		files = ", ".join(orphan_files),
+		s = "s" if len(orphan_files) > 1 else "")
 
 output =  "".join(pressing_repos)
 
